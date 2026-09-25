@@ -1,7 +1,7 @@
 {
   "id": "com.tracereactive.statistics",
   "name": "Statistics",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Comprehensive statistical analysis, hypothesis testing, distributions, and modeling.",
   "main": "dist/index.js",
   "permissions": []
