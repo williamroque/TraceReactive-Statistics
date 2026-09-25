@@ -1,0 +1,23 @@
+{
+  "name": "@tracereactive/statistics",
+  "version": "1.0.0",
+  "description": "TraceReactive Statistics package",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --outfile=dist/index.js --platform=browser --format=iife --global-name=__TraceReactive_Package",
+    "build:trpkg": "npm run build && node scripts/build-trpkg.js",
+    "dev": "npm run build -- --watch"
+  },
+  "devDependencies": {
+    "@tracereactive/types": "file:../types",
+    "adm-zip": "^0.5.10",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "arquero": "^5.4.1",
+    "jstat": "^1.9.6",
+    "ml-regression": "^5.0.0",
+    "simple-statistics": "^7.8.3"
+  }
+}
