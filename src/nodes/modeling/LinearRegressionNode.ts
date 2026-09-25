@@ -16,6 +16,7 @@ export class LinearRegressionNode extends BaseNode {
     readonly outputs = [
         { name: 'Summary', outputType: 'core:dataframe' },
         { name: 'Fitted Data', outputType: 'core:dataframe' },
+        { name: 'R-Squared', outputType: 'core:number' },
         { name: 'Model', outputType: 'core:data' }
     ];
     
@@ -26,6 +27,11 @@ export class LinearRegressionNode extends BaseNode {
     ];
 
     async evaluate(inputs: Record<string, any>, properties: Record<string, any>) {
+        for (const k in properties) {
+            if (typeof properties[k] === 'object' && properties[k] !== null && 'value' in properties[k]) {
+                properties[k] = properties[k].value;
+            }
+        }
         const table = inputs['Data'] as aq.internal.Table;
         if (!table) return {};
 
@@ -68,10 +74,10 @@ export class LinearRegressionNode extends BaseNode {
             
             const summaryRows = [];
             for(let i=0; i<features.length; i++) {
-                summaryRows.push({ term: features[i], estimate: coefs[i][0] });
+                summaryRows.push({ Term: features[i], Estimate: coefs[i][0] });
             }
             if (fitIntercept && coefs.length > features.length) {
-                summaryRows.push({ term: 'Intercept', estimate: coefs[coefs.length-1][0] });
+                summaryRows.push({ Term: 'Intercept', Estimate: coefs[coefs.length-1][0] });
             }
             
             const predictions = mlr.predict(X);
@@ -88,9 +94,22 @@ export class LinearRegressionNode extends BaseNode {
             fittedObj['y_pred'] = predictions.map((r: any) => r[0]);
             fittedObj['residual'] = residuals;
             
+            let sumY = 0;
+            for (let i = 0; i < y.length; i++) sumY += y[i][0];
+            const meanY = sumY / y.length;
+            
+            let ssTot = 0;
+            let ssRes = 0;
+            for (let i = 0; i < y.length; i++) {
+                ssTot += Math.pow(y[i][0] - meanY, 2);
+                ssRes += Math.pow(residuals[i], 2);
+            }
+            const r2 = ssTot === 0 ? 0 : 1 - (ssRes / ssTot);
+            
             return {
                 Summary: aq.from(summaryRows),
-                'Fitted Data': aq.from(fittedObj),
+                'Fitted Data': aq.table(fittedObj),
+                'R-Squared': r2,
                 Model: { type: 'ml-regression-mlr', data: modelJson, features: features, target: target }
             };
         } catch(e) {

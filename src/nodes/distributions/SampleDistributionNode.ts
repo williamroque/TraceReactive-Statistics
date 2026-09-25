@@ -15,11 +15,11 @@ export class SampleDistributionNode extends BaseNode {
     ];
     
     readonly properties = [
-        { name: 'distribution', label: 'Distribution', type: 'select' as const, options: ['Normal', 'Uniform', 'Binomial', 'Poisson'], defaultValue: 'Normal' },
+        { name: 'distribution', label: 'Distribution', type: 'select' as const, options: [{ label: 'Normal', value: 'Normal' }, { label: 'Uniform', value: 'Uniform' }, { label: 'Binomial', value: 'Binomial' }, { label: 'Poisson', value: 'Poisson' }], defaultValue: 'Normal' },
         { name: 'n', label: 'Sample Size', type: 'number' as const, defaultValue: 100 },
         { name: 'param1', label: 'Param 1 (Mean/Min/n/lambda)', type: 'number' as const, defaultValue: 0 },
         { name: 'param2', label: 'Param 2 (Std/Max/p)', type: 'number' as const, defaultValue: 1 },
-        { name: 'seed', label: 'Random Seed (empty for non-deterministic)', type: 'text' as const, defaultValue: '42' }
+        { name: 'seed', label: 'Random Seed', type: 'number' as const, defaultValue: 42 }
     ];
 
     private seededRandom(seed: number) {
@@ -38,6 +38,11 @@ export class SampleDistributionNode extends BaseNode {
     }
 
     async evaluate(inputs: Record<string, any>, properties: Record<string, any>) {
+        for (const k in properties) {
+            if (typeof properties[k] === 'object' && properties[k] !== null && 'value' in properties[k]) {
+                properties[k] = properties[k].value;
+            }
+        }
         const dist = properties['distribution'] as string;
         let n = Number(properties['n']);
         if (isNaN(n) || n < 1) n = 100;
@@ -45,10 +50,10 @@ export class SampleDistributionNode extends BaseNode {
         const p1 = Number(properties['param1']) || 0;
         const p2 = Number(properties['param2']) || (dist === 'Normal' || dist === 'Uniform' ? 1 : 0.5);
         
-        const seedStr = properties['seed'] as string;
-        const seed = seedStr !== '' && !isNaN(Number(seedStr)) ? Number(seedStr) : NaN;
+        let seed = Number(properties['seed']);
+        if (isNaN(seed)) seed = 42;
         
-        const rng = isNaN(seed) ? Math.random : this.seededRandom(seed);
+        const rng = this.seededRandom(seed);
         
         const values = [];
         
@@ -87,6 +92,6 @@ export class SampleDistributionNode extends BaseNode {
             }
         }
         
-        return { Data: aq.from({ value: values }) };
+        return { Data: aq.table({ value: values }) };
     }
 }

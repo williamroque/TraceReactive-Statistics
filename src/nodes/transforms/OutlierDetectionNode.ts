@@ -19,12 +19,17 @@ export class OutlierDetectionNode extends BaseNode {
     
     readonly properties = [
         { name: 'columns', label: 'Columns (csv)', type: 'text' as const, defaultValue: '' },
-        { name: 'method', label: 'Method', type: 'select' as const, options: ['Z-Score', 'IQR'], defaultValue: 'Z-Score' },
+        { name: 'method', label: 'Method', type: 'select' as const, options: [{ label: 'Z-Score', value: 'Z-Score' }, { label: 'IQR', value: 'IQR' }], defaultValue: 'Z-Score' },
         { name: 'threshold', label: 'Threshold', type: 'number' as const, defaultValue: 3 },
-        { name: 'action', label: 'Action', type: 'select' as const, options: ['flag', 'filter', 'clip'], defaultValue: 'flag' }
+        { name: 'action', label: 'Action', type: 'select' as const, options: [{ label: 'flag', value: 'flag' }, { label: 'filter', value: 'filter' }, { label: 'clip', value: 'clip' }], defaultValue: 'flag' }
     ];
 
     async evaluate(inputs: Record<string, any>, properties: Record<string, any>) {
+        for (const k in properties) {
+            if (typeof properties[k] === 'object' && properties[k] !== null && 'value' in properties[k]) {
+                properties[k] = properties[k].value;
+            }
+        }
         const table = inputs['Data'] as aq.internal.Table;
         if (!table) return {};
 

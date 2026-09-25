@@ -16,6 +16,7 @@ export class PolynomialFitNode extends BaseNode {
     readonly outputs = [
         { name: 'Summary', outputType: 'core:dataframe' },
         { name: 'Fitted Data', outputType: 'core:dataframe' },
+        { name: 'R-Squared', outputType: 'core:number' },
         { name: 'Model', outputType: 'core:data' }
     ];
     
@@ -26,6 +27,11 @@ export class PolynomialFitNode extends BaseNode {
     ];
 
     async evaluate(inputs: Record<string, any>, properties: Record<string, any>) {
+        for (const k in properties) {
+            if (typeof properties[k] === 'object' && properties[k] !== null && 'value' in properties[k]) {
+                properties[k] = properties[k].value;
+            }
+        }
         const table = inputs['Data'] as aq.internal.Table;
         if (!table) return {};
 
@@ -58,7 +64,7 @@ export class PolynomialFitNode extends BaseNode {
             
             const summaryRows = [];
             for (let i = 0; i < coefs.length; i++) {
-                summaryRows.push({ term: `x^${i}`, estimate: coefs[i] });
+                summaryRows.push({ Term: `x^${i}`, Estimate: coefs[i] });
             }
             
             const predictions = poly.predict(x);
@@ -71,9 +77,22 @@ export class PolynomialFitNode extends BaseNode {
                 'residual': residuals
             };
             
+            let sumY = 0;
+            for (let i = 0; i < y.length; i++) sumY += y[i];
+            const meanY = sumY / y.length;
+            
+            let ssTot = 0;
+            let ssRes = 0;
+            for (let i = 0; i < y.length; i++) {
+                ssTot += Math.pow(y[i] - meanY, 2);
+                ssRes += Math.pow(residuals[i], 2);
+            }
+            const r2 = ssTot === 0 ? 0 : 1 - (ssRes / ssTot);
+            
             return {
                 Summary: aq.from(summaryRows),
-                'Fitted Data': aq.from(fittedObj),
+                'Fitted Data': aq.table(fittedObj),
+                'R-Squared': r2,
                 Model: { type: 'ml-polynomial', data: poly.toJSON(), feature, target }
             };
         } catch(e) {

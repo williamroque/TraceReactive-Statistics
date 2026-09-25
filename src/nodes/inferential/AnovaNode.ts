@@ -14,17 +14,22 @@ export class AnovaNode extends BaseNode {
     ];
     
     readonly outputs = [
-        { name: 'AnovaTable', outputType: 'core:dataframe' },
-        { name: 'F_stat', outputType: 'core:number' },
-        { name: 'p_value', outputType: 'core:number' }
+        { name: 'Summary', outputType: 'core:dataframe' },
+        { name: 'F-Stat', outputType: 'core:number' },
+        { name: 'P-Value', outputType: 'core:number' }
     ];
     
     readonly properties = [
-        { name: 'dependentCol', label: 'Dependent Column', type: 'text' as const, defaultValue: '' },
-        { name: 'factorCols', label: 'Factor Column', type: 'text' as const, defaultValue: '' }
+        { name: 'dependentCol', label: 'Dependent Column', type: 'string' as const, defaultValue: '' },
+        { name: 'factorCols', label: 'Factor Column', type: 'string' as const, defaultValue: '' }
     ];
 
     async evaluate(inputs: Record<string, any>, properties: Record<string, any>) {
+        for (const k in properties) {
+            if (typeof properties[k] === 'object' && properties[k] !== null && 'value' in properties[k]) {
+                properties[k] = properties[k].value;
+            }
+        }
         const table = inputs['Data'] as aq.internal.Table;
         if (!table) return {};
 
@@ -61,13 +66,13 @@ export class AnovaNode extends BaseNode {
         const pValue = 1 - jStat.centralF.cdf(fStat, df1, df2);
         
         const summary = aq.from([{
-            test: 'One-Way ANOVA',
-            f_stat: fStat,
-            p_value: pValue,
-            df1: df1,
-            df2: df2
+            Test: 'One-Way ANOVA',
+            'F-Stat': fStat,
+            'P-Value': pValue,
+            DOF1: df1,
+            DOF2: df2
         }]);
         
-        return { AnovaTable: summary, F_stat: fStat, p_value: pValue };
+        return { Summary: summary, AnovaTable: summary, 'F-Stat': fStat, 'P-Value': pValue };
     }
 }

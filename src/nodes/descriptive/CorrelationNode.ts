@@ -20,11 +20,16 @@ export class CorrelationNode extends BaseNode {
     ];
     
     readonly properties = [
-        { name: 'method', label: 'Method', type: 'select' as const, options: ['Pearson', 'Spearman'], defaultValue: 'Pearson' },
+        { name: 'method', label: 'Method', type: 'select' as const, options: [{ label: 'Pearson', value: 'Pearson' }, { label: 'Spearman', value: 'Spearman' }], defaultValue: 'Pearson' },
         { name: 'columns', label: 'Columns (csv)', type: 'text' as const, defaultValue: '' }
     ];
 
     async evaluate(inputs: Record<string, any>, properties: Record<string, any>) {
+        for (const k in properties) {
+            if (typeof properties[k] === 'object' && properties[k] !== null && 'value' in properties[k]) {
+                properties[k] = properties[k].value;
+            }
+        }
         const table = inputs['Data'] as aq.internal.Table;
         if (!table) return {};
 

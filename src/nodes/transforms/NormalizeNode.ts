@@ -19,10 +19,15 @@ export class NormalizeNode extends BaseNode {
     
     readonly properties = [
         { name: 'columns', label: 'Columns (csv)', type: 'text' as const, defaultValue: '' },
-        { name: 'method', label: 'Method', type: 'select' as const, options: ['Z-Score', 'Min-Max', 'Robust'], defaultValue: 'Z-Score' }
+        { name: 'method', label: 'Method', type: 'select' as const, options: [{ label: 'Z-Score', value: 'Z-Score' }, { label: 'Min-Max', value: 'Min-Max' }, { label: 'Robust', value: 'Robust' }], defaultValue: 'Z-Score' }
     ];
 
     async evaluate(inputs: Record<string, any>, properties: Record<string, any>) {
+        for (const k in properties) {
+            if (typeof properties[k] === 'object' && properties[k] !== null && 'value' in properties[k]) {
+                properties[k] = properties[k].value;
+            }
+        }
         const table = inputs['Data'] as aq.internal.Table;
         if (!table) return {};
 

@@ -18,26 +18,29 @@ export class ProbabilityCalculatorNode extends BaseNode {
     ];
     
     readonly properties = [
-        { name: 'distribution', label: 'Distribution', type: 'select' as const, options: ['Normal', 'Uniform'], defaultValue: 'Normal' },
-        { name: 'calculation', label: 'Calculation', type: 'select' as const, options: ['PDF/PMF', 'CDF', 'Quantile'], defaultValue: 'PDF/PMF' },
+        { name: 'distribution', label: 'Distribution', type: 'select' as const, options: [{ label: 'Normal', value: 'Normal' }, { label: 'Uniform', value: 'Uniform' }], defaultValue: 'Normal' },
+        { name: 'calculation', label: 'Calculation', type: 'select' as const, options: [{ label: 'PDF/PMF', value: 'PDF/PMF' }, { label: 'CDF', value: 'CDF' }, { label: 'Quantile', value: 'Quantile' }], defaultValue: 'PDF/PMF' },
         { name: 'param1', label: 'Param 1 (Mean/Min)', type: 'number' as const, defaultValue: 0 },
         { name: 'param2', label: 'Param 2 (Std/Max)', type: 'number' as const, defaultValue: 1 },
-        { name: 'valueOrCol', label: 'Value/Col', type: 'text' as const, defaultValue: '0' }
+        { name: 'valueOrCol', label: 'Value/Col', type: 'string' as const, defaultValue: '0' }
     ];
 
     async evaluate(inputs: Record<string, any>, properties: Record<string, any>) {
+        for (const k in properties) {
+            if (typeof properties[k] === 'object' && properties[k] !== null && 'value' in properties[k]) {
+                properties[k] = properties[k].value;
+            }
+        }
         const table = inputs['Data'] as aq.internal.Table;
-        if (!table) return {};
-
         const dist = properties['distribution'] as string;
         const calc = properties['calculation'] as string;
         const p1 = Number(properties['param1']) || 0;
         const p2 = Number(properties['param2']) || 1;
         const valueOrCol = properties['valueOrCol'] as string;
         
-        const isCol = table.columnNames().includes(valueOrCol);
+        const isCol = table && table.columnNames ? table.columnNames().includes(valueOrCol) : false;
         
-        if (isCol) {
+        if (isCol && table) {
             const outCol = `${valueOrCol}_${calc.replace(/[^a-zA-Z]/g, '').toLowerCase()}`;
             const pdfArr = Array.from(table.array(valueOrCol) as Iterable<number>).map(v => {
                 if (typeof v !== 'number' || isNaN(v)) return null;

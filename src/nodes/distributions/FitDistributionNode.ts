@@ -20,10 +20,15 @@ export class FitDistributionNode extends BaseNode {
     
     readonly properties = [
         { name: 'column', label: 'Column', type: 'text' as const, defaultValue: '' },
-        { name: 'distribution', label: 'Distribution', type: 'select' as const, options: ['Normal', 'Poisson', 'Exponential', 'Gamma'], defaultValue: 'Normal' }
+        { name: 'distribution', label: 'Distribution', type: 'select' as const, options: [{ label: 'Normal', value: 'Normal' }, { label: 'Poisson', value: 'Poisson' }, { label: 'Exponential', value: 'Exponential' }, { label: 'Gamma', value: 'Gamma' }], defaultValue: 'Normal' }
     ];
 
     async evaluate(inputs: Record<string, any>, properties: Record<string, any>) {
+        for (const k in properties) {
+            if (typeof properties[k] === 'object' && properties[k] !== null && 'value' in properties[k]) {
+                properties[k] = properties[k].value;
+            }
+        }
         const table = inputs['Data'] as aq.internal.Table;
         if (!table) return {};
 

@@ -19,10 +19,15 @@ export class DifferencingNode extends BaseNode {
     readonly properties = [
         { name: 'columns', label: 'Columns (csv)', type: 'text' as const, defaultValue: '' },
         { name: 'periods', label: 'Periods', type: 'number' as const, defaultValue: 1 },
-        { name: 'method', label: 'Method', type: 'select' as const, options: ['diff', 'pct_change'], defaultValue: 'diff' }
+        { name: 'method', label: 'Method', type: 'select' as const, options: [{ label: 'diff', value: 'diff' }, { label: 'pct_change', value: 'pct_change' }], defaultValue: 'diff' }
     ];
 
     async evaluate(inputs: Record<string, any>, properties: Record<string, any>) {
+        for (const k in properties) {
+            if (typeof properties[k] === 'object' && properties[k] !== null && 'value' in properties[k]) {
+                properties[k] = properties[k].value;
+            }
+        }
         const table = inputs['Data'] as aq.internal.Table;
         if (!table) return {};
 

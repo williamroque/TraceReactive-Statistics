@@ -19,10 +19,15 @@ export class PredictNode extends BaseNode {
     ];
     
     readonly properties = [
-        { name: 'outputCol', label: 'Output Column Name', type: 'text' as const, defaultValue: 'y_pred' }
+        { name: 'outputCol', label: 'Output Column Name', type: 'string' as const, defaultValue: 'y_pred' }
     ];
 
     async evaluate(inputs: Record<string, any>, properties: Record<string, any>) {
+        for (const k in properties) {
+            if (typeof properties[k] === 'object' && properties[k] !== null && 'value' in properties[k]) {
+                properties[k] = properties[k].value;
+            }
+        }
         const table = inputs['Data'] as aq.internal.Table;
         const model = inputs['Model'];
         
@@ -32,6 +37,12 @@ export class PredictNode extends BaseNode {
         
         if (model.type === 'ml-regression-mlr') {
             const features = model.features as string[];
+            
+            const cols = table.columnNames();
+            for (const f of features) {
+                if (!cols.includes(f)) return {};
+            }
+            
             const X: number[][] = [];
             const numRows = table.numRows();
             for (let r = 0; r < numRows; r++) {
@@ -51,6 +62,9 @@ export class PredictNode extends BaseNode {
         }
         else if (model.type === 'ml-polynomial') {
             const feature = model.feature;
+            
+            if (!table.columnNames().includes(feature)) return {};
+            
             const X: number[] = [];
             const numRows = table.numRows();
             for (let r = 0; r < numRows; r++) {

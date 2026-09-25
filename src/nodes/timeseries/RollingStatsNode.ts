@@ -20,11 +20,16 @@ export class RollingStatsNode extends BaseNode {
     readonly properties = [
         { name: 'columns', label: 'Columns (csv)', type: 'text' as const, defaultValue: '' },
         { name: 'window', label: 'Window Size', type: 'number' as const, defaultValue: 3 },
-        { name: 'metric', label: 'Metric', type: 'select' as const, options: ['mean', 'std', 'min', 'max', 'ema'], defaultValue: 'mean' },
+        { name: 'metric', label: 'Metric', type: 'select' as const, options: [{ label: 'mean', value: 'mean' }, { label: 'std', value: 'std' }, { label: 'min', value: 'min' }, { label: 'max', value: 'max' }, { label: 'ema', value: 'ema' }], defaultValue: 'mean' },
         { name: 'center', label: 'Center Window', type: 'boolean' as const, defaultValue: false }
     ];
 
     async evaluate(inputs: Record<string, any>, properties: Record<string, any>) {
+        for (const k in properties) {
+            if (typeof properties[k] === 'object' && properties[k] !== null && 'value' in properties[k]) {
+                properties[k] = properties[k].value;
+            }
+        }
         const table = inputs['Data'] as aq.internal.Table;
         if (!table) return {};
 

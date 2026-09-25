@@ -19,10 +19,15 @@ export class CrossTabNode extends BaseNode {
     readonly properties = [
         { name: 'rowColumn', label: 'Row Column', type: 'text' as const, defaultValue: '' },
         { name: 'colColumn', label: 'Col Column', type: 'text' as const, defaultValue: '' },
-        { name: 'normalize', label: 'Normalize', type: 'select' as const, options: ['none', 'index', 'columns', 'all'], defaultValue: 'none' }
+        { name: 'normalize', label: 'Normalize', type: 'select' as const, options: [{ label: 'none', value: 'none' }, { label: 'index', value: 'index' }, { label: 'columns', value: 'columns' }, { label: 'all', value: 'all' }], defaultValue: 'none' }
     ];
 
     async evaluate(inputs: Record<string, any>, properties: Record<string, any>) {
+        for (const k in properties) {
+            if (typeof properties[k] === 'object' && properties[k] !== null && 'value' in properties[k]) {
+                properties[k] = properties[k].value;
+            }
+        }
         const table = inputs['Data'] as aq.internal.Table;
         if (!table) return {};
 
