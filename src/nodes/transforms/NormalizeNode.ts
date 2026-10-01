@@ -46,7 +46,7 @@ export class NormalizeNode extends BaseNode {
             
             if (method === 'Z-Score') {
                 const m = ss.mean(arr);
-                const s = ss.standardDeviation(arr);
+                const s = ss.sampleStandardDeviation(arr);
                 derivations[col] = aq.escape((d: any) => s === 0 ? 0 : (d[col] - m) / s);
             } 
             else if (method === 'Min-Max') {

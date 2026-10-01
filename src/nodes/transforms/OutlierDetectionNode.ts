@@ -51,7 +51,7 @@ export class OutlierDetectionNode extends BaseNode {
             
             if (method === 'Z-Score') {
                 const m = ss.mean(arr);
-                const s = ss.standardDeviation(arr);
+                const s = ss.sampleStandardDeviation(arr);
                 bounds[col] = { lower: m - (thresh * s), upper: m + (thresh * s) };
             } 
             else if (method === 'IQR') {
