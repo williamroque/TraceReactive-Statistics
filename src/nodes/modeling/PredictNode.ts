@@ -78,6 +78,39 @@ export class PredictNode extends BaseNode {
                 Predictions: table.assign({ [outCol]: preds })
             };
         }
+        else if (model.type === 'logistic-gd') {
+            const features = model.features as string[];
+            const weights = model.weights as number[];
+            const labelMap = model.labelMap as Record<string, number>;
+            const thresh = Number(model.threshold) || 0.5;
+            const uniqueLabels = Object.entries(labelMap).sort((a, b) => a[1] - b[1]).map(e => e[0]);
+
+            const cols = table.columnNames();
+            for (const f of features) {
+                if (!cols.includes(f)) return {};
+            }
+
+            const numRows = table.numRows();
+            const probs: number[] = [];
+            const predicted: number[] = [];
+
+            for (let r = 0; r < numRows; r++) {
+                let z = weights[0];
+                for (let i = 0; i < features.length; i++) {
+                    z += Number(table.get(features[i], r) || 0) * weights[i + 1];
+                }
+                const p = 1 / (1 + Math.exp(-z));
+                probs.push(p);
+                predicted.push(p >= thresh ? 1 : 0);
+            }
+
+            return {
+                Predictions: table.assign({
+                    [outCol]: predicted.map(v => uniqueLabels[v]),
+                    probability: probs
+                })
+            };
+        }
         
         return { Predictions: table };
     }

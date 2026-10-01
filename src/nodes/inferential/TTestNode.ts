@@ -82,9 +82,10 @@ export class TTestNode extends BaseNode {
         let df = 0;
         
         if (testType === '1-Sample') {
-            t = jStat.tscore(popMean, arr1);
-            p = jStat.ttest(t, arr1.length, tails);
+            const se1 = ss.sampleStandardDeviation(arr1) / Math.sqrt(arr1.length);
+            t = se1 === 0 ? 0 : (ss.mean(arr1) - popMean) / se1;
             df = arr1.length - 1;
+            p = jStat.ttest(t, arr1.length, tails);
         } else if (testType === 'Independent') {
             if (!groupNames) {
                 if (!col2 || !table.columnNames().includes(col2)) return {};
@@ -93,8 +94,11 @@ export class TTestNode extends BaseNode {
             if (arr2.length < 2) return {};
             
             t = ss.tTestTwoSample(arr1, arr2) || 0;
-            p = jStat.ttest(t, arr1.length + arr2.length, tails);
-            df = arr1.length + arr2.length - 2;
+            // Welch-Satterthwaite degrees of freedom
+            const v1 = ss.sampleVariance(arr1) / arr1.length;
+            const v2 = ss.sampleVariance(arr2) / arr2.length;
+            df = Math.pow(v1 + v2, 2) / (Math.pow(v1, 2) / (arr1.length - 1) + Math.pow(v2, 2) / (arr2.length - 1));
+            p = tails * jStat.studentt.cdf(-Math.abs(t), df);
         } else if (testType === 'Paired') {
             if (!col2 || !table.columnNames().includes(col2)) return {};
             const arr2Raw = Array.from(table.array(col2) as Iterable<number>);
@@ -107,9 +111,10 @@ export class TTestNode extends BaseNode {
                 }
             }
             if (diffs.length < 2) return {};
-            t = jStat.tscore(0, diffs);
-            p = jStat.ttest(t, diffs.length, tails);
+            const seDiff = ss.sampleStandardDeviation(diffs) / Math.sqrt(diffs.length);
+            t = seDiff === 0 ? 0 : ss.mean(diffs) / seDiff;
             df = diffs.length - 1;
+            p = jStat.ttest(t, diffs.length, tails);
         }
         
         const summaryData: Record<string, any> = {

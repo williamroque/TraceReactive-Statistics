@@ -66,7 +66,7 @@ export class RollingStatsNode extends BaseNode {
                 }
             } else {
                 for (let i = 0; i < arr.length; i++) {
-                    const start = i - offset + (center ? 0 : 0);
+                    const start = i - offset;
                     const end = start + win;
                     if (start < 0 || end > arr.length) continue;
                     

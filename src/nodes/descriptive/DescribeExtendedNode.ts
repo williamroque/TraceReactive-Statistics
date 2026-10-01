@@ -2,6 +2,7 @@ import { BaseNode } from '@tracereactive/types';
 import { DescriptiveCategory } from '../../categories';
 import * as aq from 'arquero';
 import * as ss from 'simple-statistics';
+import { jStat } from 'jstat';
 
 export class DescribeExtendedNode extends BaseNode {
     readonly category = DescriptiveCategory;
@@ -48,19 +49,9 @@ export class DescribeExtendedNode extends BaseNode {
         const alpha = 1 - (cl / 100);
         const p = 1 - alpha / 2;
 
-        // Helper to approximate inverse t-distribution (Abramowitz & Stegun 26.7.5)
         const getTScore = (p: number, df: number): number => {
-            const z = ss.probit(p);
-            if (df <= 0) return z;
-            if (df === 1) return Math.tan(Math.PI * (p - 0.5));
-            if (df === 2) return (2 * p - 1) / Math.sqrt(2 * p * (1 - p));
-            
-            const z2 = z * z;
-            const term1 = (z2 + 1) / 4;
-            const term2 = (5 * z2 * z2 + 16 * z2 + 3) / 96;
-            const term3 = (3 * z2 * z2 * z2 + 19 * z2 * z2 + 17 * z2 - 15) / 384;
-            
-            return z * (1 + term1 / df + term2 / (df * df) + term3 / (df * df * df));
+            if (df <= 0) return ss.probit(p);
+            return jStat.studentt.inv(p, df);
         };
 
         const summaryRows: any[] = [];

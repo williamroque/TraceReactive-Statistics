@@ -94,14 +94,20 @@ export class NonParametricTestNode extends BaseNode {
         
         const n1 = arr1.length;
         const n2 = arr2.length;
+        const N = n1 + n2;
         const U1 = R1 - (n1 * (n1 + 1)) / 2;
         const U2 = n1 * n2 - U1;
         const U = Math.min(U1, U2);
         
         const mU = (n1 * n2) / 2;
-        const sigmaU = Math.sqrt((n1 * n2 * (n1 + n2 + 1)) / 12);
+        // Ties correction: Σ(tᵢ³ - tᵢ) over all tied groups
+        const valueCounts = new Map<number, number>();
+        for (const item of combined) valueCounts.set(item.val, (valueCounts.get(item.val) ?? 0) + 1);
+        let tiesSum = 0;
+        for (const count of valueCounts.values()) tiesSum += count * count * count - count;
+        const sigmaU = N <= 1 ? 0 : Math.sqrt(n1 * n2 / 12 * ((N + 1) - tiesSum / (N * (N - 1))));
         const z = sigmaU === 0 ? 0 : (U - mU) / sigmaU;
-        const pValue = jStat.normal.cdf(z, 0, 1) * 2;
+        const pValue = 2 * jStat.normal.cdf(-Math.abs(z), 0, 1);
         
         const summaryData: Record<string, any> = {
             Test: 'Mann-Whitney U',

@@ -38,11 +38,12 @@ export class NormalityTestNode extends BaseNode {
         
         const data = Array.from(table.array(col) as Iterable<number>).filter(v => typeof v === 'number' && !isNaN(v));
         const n = data.length;
-        if (n < 4) return {};
+        if (n < 8) return {};  // JB is asymptotic; unreliable below n=8
         
         const skew = jStat.skewness(data);
         const kurt = jStat.kurtosis(data); // excess kurtosis
         
+        // Standard Jarque-Bera statistic; p-value via chi-squared(2) approximation (asymptotic)
         const jb = (n / 6) * (skew * skew + 0.25 * kurt * kurt);
         const p_value = 1 - jStat.chisquare.cdf(jb, 2);
         
